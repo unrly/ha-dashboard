@@ -1,0 +1,4 @@
+Sections Tablet Width Definition:
+    ha-view-sections-column-min-width: 220px
+    ha-view-sections-column-max-width: 300px
+    ha-view-sections-row-gap: 2px
