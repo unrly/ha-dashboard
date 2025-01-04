@@ -1,0 +1,1934 @@
+kiosk_mode:
+  non_admin_settings:
+    kiosk: true
+views:
+  - title: Home
+    sections:
+      - type: grid
+        cards:
+          - type: custom:button-card
+            name: null
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+              card:
+                - height: 1px
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Home
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/home
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Weather
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/weather
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Calendar
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/calendar
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Music
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/music
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Rick
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/rick
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: null
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+              card:
+                - height: 1px
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:atomic-calendar-revive
+            enableModeChange: true
+            entities:
+              - entity: calendar.holidays
+                name: Holidays
+              - entity: calendar.garbage_collection
+                name: Garbage Schedule
+              - entity: calendar.our_calendar
+                name: Calendar
+              - entity: calendar.cleveland_browns_2
+                name: Browns
+              - entity: calendar.shared_jaydon_calendar
+                name: Shared jaydon calendar
+              - entity: calendar.dallas_cowboys_2
+                name: Dallas cowboys
+              - entity: calendar.cleveland_cavaliers
+                name: Cleveland cavaliers
+              - entity: calendar.holidays_in_united_states
+                name: Holidays in united states
+              - entity: calendar.a_meal_plan
+                name: A meal plan
+              - entity: calendar.ohio_state_buckeyes_football
+                name: Ohio state buckeyes football
+            defaultMode: Event
+            hoursOnSameLine: true
+            showMonth: false
+            showAllDayHours: false
+            showEventDate: true
+            showCalendarName: false
+            showLastCalendarWeek: false
+            disableCalEventLink: false
+            disableCalLocationLink: false
+            showTimeRemaining: false
+            showDatePerEvent: false
+            showDate: false
+            showLoader: false
+            showRelativeTime: false
+            compactMode: true
+            showLocation: false
+            showHours: true
+            eventDateFormat: ddd D
+            grid_options:
+              columns: 16
+              rows: 5
+            maxDaysToShow: 4
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+                ha-card{
+                  box-shadow: none;
+                  border-top: 1px solid rgba(255, 255, 255, 0.2);
+                  border-radius: 0;
+                  padding: 0 !important;
+                }
+                ha-card .single-event-container{
+                  padding: 5px 0 !important;
+                }
+                ha-card .single-event-container:not(.daywrap):not(:first-child){
+                  padding-top: 0 !important;
+                }
+                ha-card .daywrap{
+                  border-top: 1px solid rgba(255, 255, 255, 0.2);
+                }
+                ha-card .event-left{
+                  width: 60px;
+                }
+                ha-card .single-event-container{
+                  line-height: 1.5em;
+                }
+          - type: heading
+            icon: ''
+            heading_style: title
+          - type: custom:mini-media-player
+            entity: media_player.kitchen_google_home
+            artwork: cover
+            visibility:
+              - condition: state
+                entity: media_player.kitchen_google_home
+                state_not: 'off'
+            volume_stateless: false
+            group: true
+            source: full
+            sound_mode: full
+            info: scroll
+            replace_mute: play_pause
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - show_current: true
+            show_forecast: true
+            type: weather-forecast
+            entity: weather.pirateweather
+            forecast_type: daily
+            grid_options:
+              rows: 4
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+      - type: grid
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Mom's Office Status
+            secondary: ''
+            icon: mdi:microsoft-teams
+            entity: light.raquel_work_light
+            badge_color: ''
+            icon_color: |
+              {%- if is_state(entity, 'on') %} 
+              {{ '#%02x%02x%02x' % state_attr(entity, 'rgb_color') }}
+              {%- else %} #b8b8b8
+              {% endif %}
+            layout: vertical
+            fill_container: true
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+            double_tap_action:
+              action: none
+            grid_options:
+              columns: 24
+              rows: 2
+            visibility:
+              - condition: state
+                entity: light.raquel_work_light
+                state_not: 'off'
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:mushroom-alarm-control-panel-card
+            entity: alarm_control_panel.alarmo
+            states:
+              - armed_home
+              - armed_away
+            grid_options:
+              columns: 24
+              rows: 5
+            visibility:
+              - condition: state
+                entity: alarm_control_panel.alarmo
+                state: armed_night
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                  }
+                mushroom-shape-icon {
+                    --shape-color: none !important;
+                    --shape-color-disabled: none !important;
+                  }
+                :host {
+                  --mush-icon-symbol-size: 1.8em;
+                }
+          - type: heading
+            icon: ''
+            heading: Lights
+            heading_style: title
+            grid_options:
+              columns: 24
+              rows: 1
+          - type: heading
+            icon: ''
+            heading_style: subtitle
+            grid_options:
+              columns: 24
+              rows: auto
+            heading: Great Room
+          - type: tile
+            entity: light.great_room_light
+            tap_action:
+              action: toggle
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+            grid_options:
+              columns: 9
+              rows: 1
+          - type: tile
+            entity: light.entryway_light
+            tap_action:
+              action: toggle
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+            grid_options:
+              columns: 9
+              rows: 1
+          - type: heading
+            icon: ''
+            heading: Outside
+            heading_style: subtitle
+            grid_options:
+              columns: 18
+              rows: auto
+          - type: tile
+            entity: light.garden_lights
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+            grid_options:
+              columns: 12
+              rows: 1
+          - type: markdown
+            content: |2-
+
+                
+            grid_options:
+              columns: 3
+              rows: 1
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: heading
+            icon: ''
+            heading_style: subtitle
+            heading: Seasonal
+            grid_options:
+              columns: 24
+              rows: auto
+          - type: tile
+            entity: light.fireplace_xmas_lights
+            tap_action:
+              action: toggle
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+            grid_options:
+              columns: 9
+              rows: 1
+          - type: tile
+            entity: light.christmas_trees
+            tap_action:
+              action: toggle
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+            grid_options:
+              columns: 9
+              rows: 1
+          - type: heading
+            icon: ''
+            heading_style: subtitle
+          - type: heading
+            icon: ''
+            heading_style: subtitle
+          - type: heading
+            icon: ''
+            heading: Security
+            heading_style: title
+            grid_options:
+              columns: 18
+              rows: 1
+          - type: tile
+            entity: cover.garage_door
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: more-info
+            hold_action:
+              action: more-info
+            features:
+              - type: cover-open-close
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+            grid_options:
+              columns: 12
+              rows: 2
+          - type: tile
+            entity: lock.front_door
+            tap_action:
+              action: more-info
+            icon_tap_action:
+              action: more-info
+            hold_action:
+              action: more-info
+            features:
+              - type: lock-commands
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+            grid_options:
+              columns: 12
+              rows: 2
+          - type: tile
+            entity: binary_sensor.inner_garage_door_contact
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+            grid_options:
+              columns: 9
+              rows: 1
+          - type: tile
+            entity: binary_sensor.sunroom_door_contact
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+            grid_options:
+              columns: 9
+              rows: 1
+          - type: tile
+            entity: binary_sensor.outer_garage_door_contact
+            vertical: false
+            show_entity_picture: false
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+            grid_options:
+              columns: 9
+              rows: 1
+          - type: heading
+            icon: ''
+            heading: Modes
+            heading_style: subtitle
+            grid_options:
+              columns: 18
+              rows: 1
+          - type: tile
+            entity: input_boolean.outside_mode
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+            grid_options:
+              columns: 9
+              rows: 1
+        column_span: 2
+      - type: grid
+        cards:
+          - type: custom:frigate-card
+            cameras:
+              - camera_entity: camera.front_door
+                live_provider: ha
+                dimensions:
+                  layout: {}
+            grid_options:
+              rows: auto
+              columns: 24
+            view: {}
+          - type: custom:frigate-card
+            cameras:
+              - camera_entity: camera.garage
+                live_provider: ha
+            grid_options:
+              columns: 24
+              rows: auto
+        column_span: 2
+    type: sections
+    max_columns: 5
+    cards: []
+    path: home
+    dense_section_placement: false
+    theme: Sections Tablet Width Definition
+  - title: Calendar
+    sections:
+      - type: grid
+        cards:
+          - type: custom:button-card
+            name: null
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+              card:
+                - height: 1px
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Home
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/home
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Weather
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/weather
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Calendar
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/calendar
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Music
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/music
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Rick
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/rick
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: null
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+              card:
+                - height: 1px
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:atomic-calendar-revive
+            enableModeChange: true
+            entities:
+              - entity: calendar.holidays
+                name: Holidays
+              - entity: calendar.garbage_collection
+                name: Garbage Schedule
+              - entity: calendar.our_calendar
+                name: Calendar
+              - entity: calendar.cleveland_browns_2
+                name: Browns
+              - entity: calendar.shared_jaydon_calendar
+                name: Shared jaydon calendar
+              - entity: calendar.dallas_cowboys_2
+                name: Dallas cowboys
+              - entity: calendar.cleveland_cavaliers
+                name: Cleveland cavaliers
+              - entity: calendar.holidays_in_united_states
+                name: Holidays in united states
+              - entity: calendar.a_meal_plan
+                name: A meal plan
+              - entity: calendar.ohio_state_buckeyes_football
+                name: Ohio state buckeyes football
+            defaultMode: Event
+            hoursOnSameLine: true
+            showMonth: false
+            showAllDayHours: false
+            showEventDate: true
+            showCalendarName: false
+            showLastCalendarWeek: false
+            disableCalEventLink: false
+            disableCalLocationLink: false
+            showTimeRemaining: false
+            showDatePerEvent: false
+            showDate: false
+            showLoader: false
+            showRelativeTime: false
+            compactMode: true
+            showLocation: false
+            showHours: true
+            eventDateFormat: ddd D
+            grid_options:
+              columns: 12
+              rows: 5
+            maxDaysToShow: 4
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+                ha-card{
+                  box-shadow: none;
+                  border-top: 1px solid rgba(255, 255, 255, 0.2);
+                  border-radius: 0;
+                  padding: 0 !important;
+                }
+                ha-card .single-event-container{
+                  padding: 5px 0 !important;
+                }
+                ha-card .single-event-container:not(.daywrap):not(:first-child){
+                  padding-top: 0 !important;
+                }
+                ha-card .daywrap{
+                  border-top: 1px solid rgba(255, 255, 255, 0.2);
+                }
+                ha-card .event-left{
+                  width: 60px;
+                }
+                ha-card .single-event-container{
+                  line-height: 1.5em;
+                }
+          - type: heading
+            icon: ''
+            heading_style: title
+          - type: custom:mini-media-player
+            entity: media_player.kitchen_google_home
+            artwork: cover
+            visibility:
+              - condition: state
+                entity: media_player.kitchen_google_home
+                state_not: 'off'
+            volume_stateless: false
+            group: true
+            source: full
+            sound_mode: full
+            info: scroll
+            replace_mute: play_pause
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - show_current: true
+            show_forecast: true
+            type: weather-forecast
+            entity: weather.pirateweather
+            forecast_type: daily
+            grid_options:
+              columns: 12
+              rows: 4
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+      - type: grid
+        cards:
+          - type: custom:week-planner-card
+            calendars:
+              - entity: calendar.our_calendar
+              - entity: calendar.cleveland_browns_2
+                color: orange
+              - entity: calendar.dallas_cowboys_2
+                color: blue
+              - color: green
+                entity: calendar.garbage_collection
+              - entity: calendar.a_meal_plan
+                color: purple
+              - entity: calendar.shared_jaydon_calendar
+            days: '21'
+            startingDay: today
+            startingDayOffset: 0
+            hideWeekend: false
+            noCardBackground: false
+            compact: true
+            weather:
+              showCondition: true
+              showTemperature: true
+              showLowTemperature: false
+              useTwiceDaily: false
+              entity: weather.pirateweather
+            locale: en
+            showLocation: false
+            hidePastEvents: false
+            hideDaysWithoutEvents: false
+            hideTodayWithoutEvents: false
+            combineSimilarEvents: false
+            showLegend: false
+            grid_options:
+              columns: 48
+              rows: auto
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+        column_span: 4
+    type: sections
+    max_columns: 5
+    cards: []
+    path: calendar
+    theme: Sections Tablet Width Definition
+  - title: Music
+    sections:
+      - type: grid
+        cards:
+          - type: custom:button-card
+            name: null
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+              card:
+                - height: 1px
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Home
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/home
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Weather
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/weather
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Calendar
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/calendar
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Music
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/music
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Rick
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/rick
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: null
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+              card:
+                - height: 1px
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:atomic-calendar-revive
+            enableModeChange: true
+            entities:
+              - entity: calendar.holidays
+                name: Holidays
+              - entity: calendar.garbage_collection
+                name: Garbage Schedule
+              - entity: calendar.our_calendar
+                name: Calendar
+              - entity: calendar.cleveland_browns_2
+                name: Browns
+              - entity: calendar.shared_jaydon_calendar
+                name: Shared jaydon calendar
+              - entity: calendar.dallas_cowboys_2
+                name: Dallas cowboys
+              - entity: calendar.cleveland_cavaliers
+                name: Cleveland cavaliers
+              - entity: calendar.holidays_in_united_states
+                name: Holidays in united states
+              - entity: calendar.a_meal_plan
+                name: A meal plan
+              - entity: calendar.ohio_state_buckeyes_football
+                name: Ohio state buckeyes football
+            defaultMode: Event
+            hoursOnSameLine: true
+            showMonth: false
+            showAllDayHours: false
+            showEventDate: true
+            showCalendarName: false
+            showLastCalendarWeek: false
+            disableCalEventLink: false
+            disableCalLocationLink: false
+            showTimeRemaining: false
+            showDatePerEvent: false
+            showDate: false
+            showLoader: false
+            showRelativeTime: false
+            compactMode: true
+            showLocation: false
+            showHours: true
+            eventDateFormat: ddd D
+            grid_options:
+              columns: 12
+              rows: 5
+            maxDaysToShow: 4
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+                ha-card{
+                  box-shadow: none;
+                  border-top: 1px solid rgba(255, 255, 255, 0.2);
+                  border-radius: 0;
+                  padding: 0 !important;
+                }
+                ha-card .single-event-container{
+                  padding: 5px 0 !important;
+                }
+                ha-card .single-event-container:not(.daywrap):not(:first-child){
+                  padding-top: 0 !important;
+                }
+                ha-card .daywrap{
+                  border-top: 1px solid rgba(255, 255, 255, 0.2);
+                }
+                ha-card .event-left{
+                  width: 60px;
+                }
+                ha-card .single-event-container{
+                  line-height: 1.5em;
+                }
+          - type: heading
+            icon: ''
+            heading_style: title
+          - type: custom:mini-media-player
+            entity: media_player.kitchen_google_home
+            artwork: cover
+            visibility:
+              - condition: state
+                entity: media_player.kitchen_google_home
+                state_not: 'off'
+            volume_stateless: false
+            group: true
+            source: full
+            sound_mode: full
+            info: scroll
+            replace_mute: play_pause
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - show_current: true
+            show_forecast: true
+            type: weather-forecast
+            entity: weather.pirateweather
+            forecast_type: daily
+            grid_options:
+              columns: 12
+              rows: 4
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+      - type: grid
+        cards:
+          - type: iframe
+            url: http://192.168.1.55:8095
+            grid_options:
+              columns: 48
+              rows: 14
+            card_mod:
+              style: |
+                ha-card{
+                  height: calc(100vh - 16px);
+                }
+        column_span: 4
+    type: sections
+    max_columns: 5
+    cards: []
+    path: music
+    theme: Sections Tablet Width Definition
+  - title: Weather
+    sections:
+      - type: grid
+        cards:
+          - type: custom:button-card
+            name: null
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+              card:
+                - height: 1px
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Home
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/home
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Weather
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/weather
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Calendar
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/calendar
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Music
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/music
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Rick
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/rick
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: null
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+              card:
+                - height: 1px
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:atomic-calendar-revive
+            enableModeChange: true
+            entities:
+              - entity: calendar.holidays
+                name: Holidays
+              - entity: calendar.garbage_collection
+                name: Garbage Schedule
+              - entity: calendar.our_calendar
+                name: Calendar
+              - entity: calendar.cleveland_browns_2
+                name: Browns
+              - entity: calendar.shared_jaydon_calendar
+                name: Shared jaydon calendar
+              - entity: calendar.dallas_cowboys_2
+                name: Dallas cowboys
+              - entity: calendar.cleveland_cavaliers
+                name: Cleveland cavaliers
+              - entity: calendar.holidays_in_united_states
+                name: Holidays in united states
+              - entity: calendar.a_meal_plan
+                name: A meal plan
+              - entity: calendar.ohio_state_buckeyes_football
+                name: Ohio state buckeyes football
+            defaultMode: Event
+            hoursOnSameLine: true
+            showMonth: false
+            showAllDayHours: false
+            showEventDate: true
+            showCalendarName: false
+            showLastCalendarWeek: false
+            disableCalEventLink: false
+            disableCalLocationLink: false
+            showTimeRemaining: false
+            showDatePerEvent: false
+            showDate: false
+            showLoader: false
+            showRelativeTime: false
+            compactMode: true
+            showLocation: false
+            showHours: true
+            eventDateFormat: ddd D
+            grid_options:
+              columns: 12
+              rows: 5
+            maxDaysToShow: 4
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+                ha-card{
+                  box-shadow: none;
+                  border-top: 1px solid rgba(255, 255, 255, 0.2);
+                  border-radius: 0;
+                  padding: 0 !important;
+                }
+                ha-card .single-event-container{
+                  padding: 5px 0 !important;
+                }
+                ha-card .single-event-container:not(.daywrap):not(:first-child){
+                  padding-top: 0 !important;
+                }
+                ha-card .daywrap{
+                  border-top: 1px solid rgba(255, 255, 255, 0.2);
+                }
+                ha-card .event-left{
+                  width: 60px;
+                }
+                ha-card .single-event-container{
+                  line-height: 1.5em;
+                }
+          - type: heading
+            icon: ''
+            heading_style: title
+          - type: custom:mini-media-player
+            entity: media_player.kitchen_google_home
+            artwork: cover
+            visibility:
+              - condition: state
+                entity: media_player.kitchen_google_home
+                state_not: 'off'
+            volume_stateless: false
+            group: true
+            source: full
+            sound_mode: full
+            info: scroll
+            replace_mute: play_pause
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - show_current: true
+            show_forecast: true
+            type: weather-forecast
+            entity: weather.pirateweather
+            forecast_type: daily
+            grid_options:
+              columns: 12
+              rows: 4
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+      - type: grid
+        cards:
+          - show_current: true
+            show_forecast: true
+            type: weather-forecast
+            entity: weather.pirateweather
+            forecast_type: daily
+            grid_options:
+              columns: 48
+              rows: 4
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:hourly-weather
+            entity: weather.pirateweather
+            grid_options:
+              columns: 48
+              rows: auto
+            name: ' '
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: tile
+            entity: sensor.biergarten_ws_last_rain
+            name: Last Rain
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: tile
+            entity: sensor.biergarten_ws_daily_rain
+            name: Daily Rain
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: tile
+            entity: sensor.biergarten_ws_weekly_rain
+            name: Weekly Rain
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:bubble-card
+            grid_options:
+              columns: 6
+              rows: 1
+          - type: tile
+            entity: sensor.biergarten_ws_wind_gust
+            name: Wind Gust
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: tile
+            entity: sensor.biergarten_ws_wind_speed
+            name: Wind Speed
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: heading
+            icon: ''
+            heading_style: subtitle
+            grid_options:
+              columns: 36
+              rows: auto
+          - type: tile
+            entity: sensor.thermostat_temperature
+            name: Thermostat
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: tile
+            entity: sensor.basement_temperature
+            name: Basement
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: tile
+            entity: sensor.office_temperature_sensor_aht20_temp
+            name: Office
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: tile
+            entity: sensor.sunroom_temperature_sensor_aht20_temp
+            name: Sunroom
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+        column_span: 2
+      - type: grid
+        cards:
+          - type: custom:weather-radar-card
+            map_style: Dark
+            zoom_level: 9
+            show_playback: true
+            show_recenter: false
+            square_map: true
+            grid_options:
+              columns: 24
+              rows: 8
+        column_span: 2
+    type: sections
+    max_columns: 5
+    cards: []
+    path: weather
+    theme: Sections Tablet Width Definition
+  - type: sections
+    max_columns: 5
+    title: Rick
+    path: rick
+    sections:
+      - type: grid
+        cards:
+          - type: custom:button-card
+            name: null
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+              card:
+                - height: 1px
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Home
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/home
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Weather
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/weather
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Calendar
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/calendar
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Music
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/music
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: Rick
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+                - font-size: 24px
+              card:
+                - height: 34px
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-test/rick
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:button-card
+            name: null
+            styles:
+              name:
+                - justify-self: start
+                - padding: 0px 20px
+              card:
+                - height: 1px
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - type: custom:atomic-calendar-revive
+            enableModeChange: true
+            entities:
+              - entity: calendar.holidays
+                name: Holidays
+              - entity: calendar.garbage_collection
+                name: Garbage Schedule
+              - entity: calendar.our_calendar
+                name: Calendar
+              - entity: calendar.cleveland_browns_2
+                name: Browns
+              - entity: calendar.shared_jaydon_calendar
+                name: Shared jaydon calendar
+              - entity: calendar.dallas_cowboys_2
+                name: Dallas cowboys
+              - entity: calendar.cleveland_cavaliers
+                name: Cleveland cavaliers
+              - entity: calendar.holidays_in_united_states
+                name: Holidays in united states
+              - entity: calendar.a_meal_plan
+                name: A meal plan
+              - entity: calendar.ohio_state_buckeyes_football
+                name: Ohio state buckeyes football
+            defaultMode: Event
+            hoursOnSameLine: true
+            showMonth: false
+            showAllDayHours: false
+            showEventDate: true
+            showCalendarName: false
+            showLastCalendarWeek: false
+            disableCalEventLink: false
+            disableCalLocationLink: false
+            showTimeRemaining: false
+            showDatePerEvent: false
+            showDate: false
+            showLoader: false
+            showRelativeTime: false
+            compactMode: true
+            showLocation: false
+            showHours: true
+            eventDateFormat: ddd D
+            grid_options:
+              columns: 12
+              rows: 5
+            maxDaysToShow: 4
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+                ha-card{
+                  box-shadow: none;
+                  border-top: 1px solid rgba(255, 255, 255, 0.2);
+                  border-radius: 0;
+                  padding: 0 !important;
+                }
+                ha-card .single-event-container{
+                  padding: 5px 0 !important;
+                }
+                ha-card .single-event-container:not(.daywrap):not(:first-child){
+                  padding-top: 0 !important;
+                }
+                ha-card .daywrap{
+                  border-top: 1px solid rgba(255, 255, 255, 0.2);
+                }
+                ha-card .event-left{
+                  width: 60px;
+                }
+                ha-card .single-event-container{
+                  line-height: 1.5em;
+                }
+          - type: heading
+            icon: ''
+            heading_style: title
+          - type: custom:mini-media-player
+            entity: media_player.kitchen_google_home
+            artwork: cover
+            visibility:
+              - condition: state
+                entity: media_player.kitchen_google_home
+                state_not: 'off'
+            volume_stateless: false
+            group: true
+            source: full
+            sound_mode: full
+            info: scroll
+            replace_mute: play_pause
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+          - show_current: true
+            show_forecast: true
+            type: weather-forecast
+            entity: weather.pirateweather
+            forecast_type: daily
+            grid_options:
+              columns: 12
+              rows: 4
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+      - type: grid
+        cards:
+          - type: custom:mod-card
+            card_mod:
+              style: |
+                ha-card {
+                   border: none !important;
+                   background: none
+                }
+            card:
+              type: custom:vacuum-card
+              entity: vacuum.rick
+            grid_options:
+              columns: 24
+              rows: auto
+        column_span: 2
+      - type: grid
+        cards:
+          - type: custom:xiaomi-vacuum-map-card
+            map_source:
+              camera: camera.xiaomi_cloud_map_extractor
+            calibration_source:
+              camera: true
+            entity: vacuum.rick
+            vacuum_platform: default
+            icons:
+              - icon: mdi:play
+                conditions:
+                  - entity: vacuum.rick
+                    value_not: cleaning
+                  - entity: vacuum.rick
+                    value_not: error
+                  - entity: vacuum.rick
+                    value_not: returning
+                tooltip: Start
+                tap_action:
+                  action: call-service
+                  service: vacuum.start
+                  service_data:
+                    entity_id: vacuum.rick
+              - icon: mdi:pause
+                conditions:
+                  - entity: vacuum.rick
+                    value_not: docked
+                  - entity: vacuum.rick
+                    value_not: idle
+                  - entity: vacuum.rick
+                    value_not: error
+                  - entity: vacuum.rick
+                    value_not: paused
+                tooltip: Pause
+                tap_action:
+                  action: call-service
+                  service: vacuum.pause
+                  service_data:
+                    entity_id: vacuum.rick
+              - icon: mdi:stop
+                conditions:
+                  - entity: vacuum.rick
+                    value_not: docked
+                  - entity: vacuum.rick
+                    value_not: idle
+                  - entity: vacuum.rick
+                    value_not: error
+                  - entity: vacuum.rick
+                    value_not: paused
+                tooltip: Stop
+                tap_action:
+                  action: call-service
+                  service: vacuum.stop
+                  service_data:
+                    entity_id: vacuum.rick
+              - icon: mdi:home-map-marker
+                conditions:
+                  - entity: vacuum.rick
+                    value_not: docked
+                  - entity: vacuum.rick
+                    value_not: returning
+                tooltip: Return to base
+                tap_action:
+                  action: call-service
+                  service: vacuum.return_to_base
+                  service_data:
+                    entity_id: vacuum.rick
+              - icon: mdi:target-variant
+                conditions:
+                  - entity: vacuum.rick
+                    value_not: docked
+                  - entity: vacuum.rick
+                    value_not: error
+                  - entity: vacuum.rick
+                    value_not: cleaning
+                  - entity: vacuum.rick
+                    value_not: returning
+                tooltip: Clean spot
+                tap_action:
+                  action: call-service
+                  service: vacuum.clean_spot
+                  service_data:
+                    entity_id: vacuum.rick
+              - icon: mdi:map-marker
+                tooltip: Locate
+                tap_action:
+                  action: call-service
+                  service: vacuum.locate
+                  service_data:
+                    entity_id: vacuum.rick
+              - menu_id: fan_speed
+                icon: mdi:fan-remove
+                label: Silent
+                conditions:
+                  - entity: vacuum.rick
+                    attribute: fan_speed
+                    value: Silent
+                tooltip: Change fan speed
+                tap_action:
+                  action: call-service
+                  service: vacuum.set_fan_speed
+                  service_data:
+                    entity_id: vacuum.rick
+                    fan_speed: Silent
+              - menu_id: fan_speed
+                icon: mdi:fan-speed-1
+                label: Standard
+                conditions:
+                  - entity: vacuum.rick
+                    attribute: fan_speed
+                    value: Standard
+                tooltip: Change fan speed
+                tap_action:
+                  action: call-service
+                  service: vacuum.set_fan_speed
+                  service_data:
+                    entity_id: vacuum.rick
+                    fan_speed: Standard
+              - menu_id: fan_speed
+                icon: mdi:fan-speed-2
+                label: Medium
+                conditions:
+                  - entity: vacuum.rick
+                    attribute: fan_speed
+                    value: Medium
+                tooltip: Change fan speed
+                tap_action:
+                  action: call-service
+                  service: vacuum.set_fan_speed
+                  service_data:
+                    entity_id: vacuum.rick
+                    fan_speed: Medium
+              - menu_id: fan_speed
+                icon: mdi:fan-speed-3
+                label: Turbo
+                conditions:
+                  - entity: vacuum.rick
+                    attribute: fan_speed
+                    value: Turbo
+                tooltip: Change fan speed
+                tap_action:
+                  action: call-service
+                  service: vacuum.set_fan_speed
+                  service_data:
+                    entity_id: vacuum.rick
+                    fan_speed: Turbo
+              - menu_id: fan_speed
+                icon: mdi:waves
+                label: Gentle
+                conditions:
+                  - entity: vacuum.rick
+                    attribute: fan_speed
+                    value: Gentle
+                tooltip: Change fan speed
+                tap_action:
+                  action: call-service
+                  service: vacuum.set_fan_speed
+                  service_data:
+                    entity_id: vacuum.rick
+                    fan_speed: Gentle
+              - menu_id: fan_speed
+                icon: mdi:fan-auto
+                label: Auto
+                conditions:
+                  - entity: vacuum.rick
+                    attribute: fan_speed
+                    value: Auto
+                tooltip: Change fan speed
+                tap_action:
+                  action: call-service
+                  service: vacuum.set_fan_speed
+                  service_data:
+                    entity_id: vacuum.rick
+                    fan_speed: Auto
+              - icon: mdi:fan-alert
+                conditions:
+                  - entity: vacuum.rick
+                    attribute: fan_speed
+                    value_not: Silent
+                  - entity: vacuum.rick
+                    attribute: fan_speed
+                    value_not: Standard
+                  - entity: vacuum.rick
+                    attribute: fan_speed
+                    value_not: Medium
+                  - entity: vacuum.rick
+                    attribute: fan_speed
+                    value_not: Turbo
+                  - entity: vacuum.rick
+                    attribute: fan_speed
+                    value_not: Gentle
+                  - entity: vacuum.rick
+                    attribute: fan_speed
+                    value_not: Auto
+                tooltip: Change fan speed
+                tap_action:
+                  action: call-service
+                  service: vacuum.set_fan_speed
+                  service_data:
+                    entity_id: vacuum.rick
+                    fan_speed: Silent
+            tiles:
+              - tile_id: status
+                entity: vacuum.rick
+                label: Status
+                attribute: status
+                icon: mdi:robot-vacuum
+                translations:
+                  starting: Starting
+                  charger disconnected: Charger disconnected
+                  idle: Idle
+                  remote control active: Remote control active
+                  cleaning: Cleaning
+                  returning home: Returning home
+                  manual mode: Manual mode
+                  charging: Charging
+                  charging problem: Charging problem
+                  paused: Paused
+                  spot cleaning: Spot cleaning
+                  error: Error
+                  shutting down: Shutting down
+                  updating: Updating
+                  docking: Docking
+                  going to target: Going to target
+                  zoned cleaning: Zoned cleaning
+                  segment cleaning: Segment cleaning
+                  emptying the bin: Emptying the bin
+                  charging complete: Charging complete
+                  device offline: Device offline
+              - tile_id: battery_level
+                entity: vacuum.rick
+                label: Battery
+                attribute: battery_level
+                icon_source: vacuum.rick.attributes.battery_icon
+                unit: '%'
+              - tile_id: fan_speed
+                entity: vacuum.rick
+                label: Fan speed
+                attribute: fan_speed
+                icon: mdi:fan
+                translations:
+                  silent: Silent
+                  standard: Standard
+                  medium: Medium
+                  turbo: Turbo
+                  auto: Auto
+                  gentle: Gentle
+            map_modes: []
+            additional_presets: []
+            attributes:
+              - rooms
+            card_mod:
+              style: |
+                ha-card {
+                   border-width: 0px !important;
+                   background: none
+                }
+            grid_options:
+              columns: 24
+              rows: auto
+        column_span: 2
+    cards: []
+    theme: Sections Tablet Width Definition
