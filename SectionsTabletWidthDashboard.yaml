@@ -135,7 +135,7 @@ views:
                 name: Calendar
               - entity: calendar.cleveland_browns_2
                 name: Browns
-              - entity: calendar.shared_jaydon_calendar
+              - entity: calendar.shared_calendar
                 name: Shared jaydon calendar
               - entity: calendar.dallas_cowboys_2
                 name: Dallas cowboys
