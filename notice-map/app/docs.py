@@ -59,10 +59,16 @@ def collect_links(client: httpx.Client, case: Case, page_template: Optional[str]
     pages: list[str] = []
     docs: list[dict] = []
     for link in case.links:
-        if DOC_URL_RE.search(link["url"]):
+        u = link["url"]
+        if DOC_URL_RE.search(u):
+            docs.append({**link, "kind": "pdf"})
+        elif "sharepoint.com" in u:
+            # The county's public document library: a shared folder per case. Linked as-is.
+            docs.append({**link, "kind": "folder"})
+        elif link.get("kind") == "page":
             docs.append(link)
         else:
-            pages.append(link["url"])
+            pages.append(u)
     if page_template:
         pages.append(page_template.replace("{case}", case.case_number))
     for page in pages[:3]:
@@ -73,7 +79,7 @@ def collect_links(client: httpx.Client, case: Case, page_template: Optional[str]
             log.info("case page %s: %s", page, e)
             continue
         if "html" in r.headers.get("content-type", ""):
-            docs.extend(doc_links_in_html(r.text, str(r.url)))
+            docs.extend({**d, "kind": "pdf"} for d in doc_links_in_html(r.text, str(r.url)))
     seen, out = set(), []
     for d in docs:
         if d["url"] not in seen:

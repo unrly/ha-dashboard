@@ -106,6 +106,36 @@ def circle(lat: float, lon: float, radius_km: float, steps: int = 72) -> dict:
     return {"type": "Polygon", "coordinates": [pts]}
 
 
+def distance_to_boundary_km(lon: float, lat: float, geometry: dict) -> float:
+    """Shortest distance from a point to the geometry's edges, in km (flat-earth approximation)."""
+    kx = 111.32 * math.cos(math.radians(lat))
+    ky = 110.57
+    px, py = lon * kx, lat * ky
+    best = float("inf")
+    for poly in polygons_of(geometry):
+        for ring in poly:
+            for i in range(len(ring) - 1):
+                ax, ay = ring[i][0] * kx, ring[i][1] * ky
+                bx, by = ring[i + 1][0] * kx, ring[i + 1][1] * ky
+                dx, dy = bx - ax, by - ay
+                L = dx * dx + dy * dy
+                t = 0.0 if L == 0 else max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / L))
+                best = min(best, math.hypot(px - (ax + t * dx), py - (ay + t * dy)))
+    return best
+
+
+def within(lon: float, lat: float, geometry: dict, buffer_km: float = 0.0) -> bool:
+    if point_in_geometry(lon, lat, geometry):
+        return True
+    return buffer_km > 0 and distance_to_boundary_km(lon, lat, geometry) <= buffer_km
+
+
+def expand_bbox(b: tuple[float, float, float, float], km: float) -> tuple[float, float, float, float]:
+    dlat = km / 110.57
+    dlon = km / (111.32 * math.cos(math.radians((b[1] + b[3]) / 2)))
+    return b[0] - dlon, b[1] - dlat, b[2] + dlon, b[3] + dlat
+
+
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     r = 6371.0
     p1, p2 = math.radians(lat1), math.radians(lat2)

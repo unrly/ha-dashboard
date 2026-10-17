@@ -17,6 +17,8 @@ class AreaConfig(BaseModel):
     zip: str = "80128"
     center: tuple[float, float] = (39.5866, -105.0850)  # lat, lon (used for radius mode and map start)
     radius_km: float = 6.0
+    # Also include notices this close to the outside of the boundary.
+    buffer_km: float = 1.0
     geojson_path: Optional[str] = None
     # Census TIGERweb service that holds ZIP Code Tabulation Areas. The layer is found by name.
     zcta_service: str = (
@@ -32,10 +34,18 @@ class SourceConfig(BaseModel):
             "https://gisportal.jeffco.us/server/rest/services",
         ]
     )
-    # ArcGIS layer with active land use cases, e.g. ".../MapServer/3". Empty = auto-discover on first scan.
+    # The county's AMANDA development review service: one layer per case type (Rezoning, Special Use, ...).
+    service_url: Optional[str] = (
+        "https://gisportal.jeffco.us/server/rest/services/PZ_Amanda7_Development_Review/MapServer"
+    )
+    # Or a single layer, e.g. ".../MapServer/7". If both are empty the first scan searches the GIS server.
     layer_url: Optional[str] = None
-    # Extra filter applied on the server, e.g. "STATUS <> 'Closed'".
+    # Extra filter applied on the server, e.g. "FOLDERTYPE = 'RZ'".
     where: str = "1=1"
+    # Skip cases filed longer ago than this; the county service still lists open cases from decades ago.
+    max_age_years: float = 3
+    # County posts for high interest cases: plain-language summaries, case managers, document folders.
+    news_list_url: Optional[str] = "https://www.jeffco.us/CivicAlerts.aspx?CID=64"
     # Map our fields to the layer's field names. Anything left out is guessed from the field names.
     fields: dict[str, str] = Field(default_factory=dict)
     # Optional case page, used to find PDF links. {case} is replaced with the case number.

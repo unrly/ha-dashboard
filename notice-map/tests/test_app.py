@@ -15,7 +15,10 @@ from tests import fake_county as fc
 def env(tmp_path, monkeypatch):
     s = Settings(data_dir=tmp_path)
     s.area.zcta_service = fc.ZCTA_SVC
+    s.area.buffer_km = 0
     s.source.gis_roots = [fc.ROOT]
+    s.source.service_url = None  # these tests use the single-layer discovery path
+    s.source.news_list_url = None
     monkeypatch.setattr(scan, "http_client", lambda settings: fc.client())
     return s, Store(tmp_path / "t.db"), scan.ScanState()
 
@@ -124,3 +127,29 @@ def test_api_lists_cases(env, monkeypatch, tmp_path):
     assert c.get("/api/status").json()["zip"] == "80128"
     assert c.get("/api/area").json()["geometry"]["type"] == "Polygon"
     assert c.get("/").status_code == 200
+
+
+# ---------- the county's real data shape (AMANDA service: one layer per case type, no object IDs)
+def test_amanda_service_scan_with_posts_and_buffer(env):
+    s, store, state = env
+    s.source.service_url = fc.AMANDA
+    s.source.news_list_url = "https://news.example/list"
+    r = scan.run_scan(s, store, state)
+    assert r["kept"] == 2  # the edge case sits outside the ZIP
+    rz = store.case("26-103768RZ")
+    assert rz["type_code"] == "RZ" and rz["layer"] == "Rezoning"
+    assert rz["raw"]["parcel_count"] == 2
+    assert rz["lat"] == pytest.approx(39.581) and rz["lon"] == pytest.approx(-105.081)
+    # Enriched from the county's post.
+    assert rz["name"] == "6859 S Iris Street (Dutch Creek) Rezoning"
+    assert rz["planner"] == "Pat Planner"
+    assert "47 single-family homes" in rz["description"]
+    assert rz["dates"]["pc_hearing"] == "2099-11-12" and rz["dates"]["bcc_hearing"] == "2099-12-09"
+    assert rz["status_kind"] == "hearing"
+    assert [d["kind"] for d in rz["docs"]] == ["folder", "page"]
+    sd = store.case("26-110298SD")
+    assert sd["name"] == "10482 West Toller Drive Site Development" and sd["type_code"] == "SDP"
+
+    s.area.buffer_km = 1.0
+    r = scan.run_scan(s, store, state)
+    assert r["kept"] == 3 and store.case("26-110299SD")["name"] == "Edge Business Park"

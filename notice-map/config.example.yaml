@@ -5,14 +5,18 @@ area:
   zip: "80128"
   center: [39.5866, -105.0850]   # lat, lon: map start point and radius-mode center
   radius_km: 6
+  buffer_km: 1        # also show notices within this distance outside the boundary (0 = strictly inside)
   # geojson_path: /config/my-area.geojson
 
 source:
-  # The county ArcGIS layer with active land use cases. Leave empty and the first scan
-  # will search the county GIS server for it. Check the result with:
-  #   python -m app.discover            (or: docker compose run --rm notice-map python -m app.discover)
+  # County AMANDA development review service (one layer per case type).
+  service_url: https://gisportal.jeffco.us/server/rest/services/PZ_Amanda7_Development_Review/MapServer
+  # Or one layer. If both are empty, the first scan searches the county GIS server
+  # (see: python -m app.discover).
   layer_url:
-  where: "1=1"        # optional server-side filter, e.g. "STATUS <> 'Closed'"
+  where: "1=1"        # optional server-side filter, e.g. "FOLDERTYPE IN ('RZ','SD','SU')"
+  max_age_years: 3    # skip cases filed longer ago than this
+  news_list_url: https://www.jeffco.us/CivicAlerts.aspx?CID=64   # high interest case posts
   # Map fields if the guesses are wrong (see `python -m app.discover --layer <url>`):
   fields: {}
   #   case_number: CASE_NUM

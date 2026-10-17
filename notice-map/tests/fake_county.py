@@ -36,6 +36,40 @@ FEATURES = [
      "geometry": parcel(-105.079, 39.581)},
 ]
 
+AMANDA = "https://gis.example/server/rest/services/PZ_Amanda7_Development_Review/MapServer"
+AMANDA_FIELDS = [{"name": n, "type": t} for n, t in [
+    ("FOLDERRSN", "esriFieldTypeInteger"), ("INDATE", "esriFieldTypeDate"), ("FINALDATE", "esriFieldTypeDate"),
+    ("FOLDERTYPE", "esriFieldTypeString"), ("STATUSCODE", "esriFieldTypeInteger"),
+    ("PROPERTYNAME", "esriFieldTypeString"), ("WORKDESC", "esriFieldTypeString"), ("FOLDERDESC", "esriFieldTypeString"),
+    ("FOLDERYEAR", "esriFieldTypeString"), ("FOLDERSEQUENCE", "esriFieldTypeString"), ("Shape", "esriFieldTypeGeometry")]]
+
+
+def amanda(y, seq, t, name, desc, lon, lat, final=None):
+    return {"attributes": {"FOLDERRSN": int(seq), "INDATE": 1767225600000, "FINALDATE": final, "FOLDERTYPE": t,
+                           "STATUSCODE": 60020, "PROPERTYNAME": name, "WORKDESC": "Planned Development",
+                           "FOLDERDESC": desc, "FOLDERYEAR": y, "FOLDERSEQUENCE": seq},
+            "geometry": {"x": lon, "y": lat}}
+
+
+AMANDA_LAYERS = {
+    7: ("Rezoning", [amanda("26", "103768", "RZ", "6859 S Iris ST", "Rezoning from A-1 to PD", -105.080, 39.580),
+                     amanda("26", "103768", "RZ", "6859 S Iris ST", "Rezoning from A-1 to PD", -105.082, 39.582)]),
+    10: ("Site Development", [amanda("26", "110298", "SD", "10482 West Toller Drive", "SDP for industrial", -105.07, 39.57),
+                              # 0.5 km outside the east edge of the ZIP square: kept only with a buffer.
+                              amanda("26", "110299", "SD", "Edge Business Park", "SDP", -105.0342, 39.58)]),
+}
+
+NEWS_LIST = """<html><body><a href="/m/newsflash/Home/Detail/2621">6859 S Iris Street (Dutch Creek) Rezoning</a>
+<a href="/m/newsflash/Home/Detail/2665">Weigh in on water supply</a></body></html>"""
+NEWS_POST = """<html><body><nav>Location Services</nav><h1>6859 S Iris Street (Dutch Creek) Rezoning</h1>
+<p>Posted on May 14, 2026</p><h3>Location</h3><p>6859 S Iris Street and PIN 300503777</p>
+<h3>Case Summary</h3><p>The application proposes to Rezone from A-1 to PD to allow for up to 47 single-family homes.</p>
+<h3>Case Number</h3><p>26-103768RZ</p><h3>Documents</h3>
+<p><a href="https://county.sharepoint.com/:f:/s/AmandaDocLib_Public/abc">View the current referral documents.</a></p>
+<h3>Case Manager</h3><p>Pat Planner; <a href="mailto:x">email the Case Manager here</a></p>
+<h3>Hearings</h3><p>The Planning Commission hearing is scheduled for November 12, 2099. The Board of County Commissioners hearing is December 9, 2099.</p>
+<h3>Related News</h3><a href="/m/newsflash/Home/Detail/1">Other</a></body></html>"""
+
 CASE_PAGE = """<html><body><h1>26-100001RZ</h1>
 <a href="/DocumentCenter/View/111/Narrative">Application narrative</a>
 <a href="/files/site-plan.pdf">Site plan</a>
@@ -78,6 +112,24 @@ def handler(request: httpx.Request) -> httpx.Response:
         return js({"features": [{"attributes": {"ZCTA5": "80128"}, "geometry": {"rings": [ZIP_RING]}}]})
     if url == "https://county.example/cases/26-100001RZ":
         return httpx.Response(200, text=CASE_PAGE, headers={"content-type": "text/html"})
+    if url == AMANDA:
+        return js({"layers": [{"id": k, "name": v[0]} for k, v in AMANDA_LAYERS.items()]})
+    for k, (name, feats) in AMANDA_LAYERS.items():
+        if url == f"{AMANDA}/{k}":
+            return js({"name": name, "geometryType": "esriGeometryPoint", "maxRecordCount": 1,
+                       "advancedQueryCapabilities": {"supportsPagination": True}, "fields": AMANDA_FIELDS})
+        if url == f"{AMANDA}/{k}/query":
+            if "resultOffset" in q and not q.get("orderByFields"):
+                return js({"error": {"code": 400, "message": "Pagination request requires either orderBy field"}})
+            assert "INDATE >= DATE '" in q["where"]
+            off = int(q.get("resultOffset", 0))
+            return js({"features": feats[off:off + 1], "exceededTransferLimit": off + 1 < len(feats)})
+    if url == "https://news.example/list":
+        return httpx.Response(200, text=NEWS_LIST, headers={"content-type": "text/html"})
+    if url == "https://news.example/m/newsflash/Home/Detail/2621":
+        return httpx.Response(200, text=NEWS_POST, headers={"content-type": "text/html"})
+    if url == "https://news.example/m/newsflash/Home/Detail/2665":
+        return httpx.Response(200, text="<html><p>Posted on Oct 1</p>No case here</html>", headers={"content-type": "text/html"})
     if url.endswith("/error"):
         return js({"error": {"code": 400, "message": "Invalid query"}})
     return httpx.Response(404, text="not found: " + url)

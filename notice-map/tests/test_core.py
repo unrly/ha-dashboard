@@ -23,6 +23,22 @@ def test_esri_parcel_centroid():
     assert geo.esri_to_point(None) is None
 
 
+def test_buffer_distance():
+    g = {"type": "Polygon", "coordinates": [fc.ZIP_RING]}
+    assert geo.within(-105.0342, 39.58, g, 1.0) and not geo.within(-105.0342, 39.58, g, 0)
+    assert geo.distance_to_boundary_km(-105.0342, 39.58, g) == pytest.approx(0.5, abs=0.05)
+
+
+def test_amanda_case_number_and_name():
+    f = fc.amanda("25", "114601", "RZ", "10700 W Bowles AVE", "To Rezone", -105.1, 39.6)
+    fmap = cases.resolve_fields([x["name"] for x in fc.AMANDA_FIELDS], {})
+    c = cases.from_feature(f, fmap, (-105.1, 39.6), None, "Rezoning")
+    assert c.case_number == "25-114601RZ" and c.address == "10700 W Bowles AVE"
+    assert c.name == "10700 W Bowles Ave Rezoning" and c.dates["filed"] == "2026-01-01"
+    assert "status" not in fmap and c.status == ""  # STATUSCODE has no public labels
+    assert cases.normalize_type("26-1MA", "", "Minor Amendment") == "MA"
+
+
 def test_circle_contains_center():
     g = geo.circle(39.58, -105.08, 5)
     assert geo.point_in_geometry(-105.08, 39.58, g)

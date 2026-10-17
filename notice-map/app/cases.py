@@ -11,27 +11,35 @@ from pydantic import BaseModel, Field
 FIELD_GUESSES: dict[str, list[str]] = {
     "case_number": ["CASE_NUMBER", "CASENUMBER", "CASE_NO", "CASENO", "CASE_NUM", "CASE_ID", "CASEID", "CASE",
                     "RECORD_ID", "RECORDID", "PERMIT_NUMBER", "APP_NUMBER"],
-    "name": ["CASE_NAME", "CASENAME", "PROJECT_NAME", "PROJECTNAME", "PROJECT", "NAME", "TITLE"],
-    "case_type": ["CASE_TYPE", "CASETYPE", "TYPE", "APPLICATION_TYPE", "APP_TYPE", "RECORD_TYPE", "PROCESS"],
-    "status": ["STATUS", "CASE_STATUS", "CASESTATUS", "STAGE", "PHASE"],
+    "name": ["CASE_NAME", "CASENAME", "PROJECT_NAME", "PROJECTNAME", "PROJECT", "PROPERTYNAME", "NAME", "TITLE"],
+    "case_type": ["CASE_TYPE", "CASETYPE", "TYPE", "APPLICATION_TYPE", "APP_TYPE", "RECORD_TYPE", "PROCESS", "WORKDESC"],
+    "status": ["STATUSDESC", "STATUS", "CASE_STATUS", "CASESTATUS", "STAGE", "PHASE"],
     "address": ["ADDRESS", "SITE_ADDRESS", "SITEADDRESS", "LOCATION", "PROPERTY_ADDRESS", "SITUS", "FULL_ADDRESS"],
-    "description": ["DESCRIPTION", "DESC", "REQUEST", "PROPOSAL", "SUMMARY", "COMMENTS", "PURPOSE"],
+    "description": ["DESCRIPTION", "DESC", "REQUEST", "PROPOSAL", "SUMMARY", "COMMENTS", "PURPOSE", "FOLDERDESC"],
     "planner": ["PLANNER", "CASE_PLANNER", "CASEPLANNER", "STAFF", "CONTACT", "ASSIGNED_TO"],
     "applicant": ["APPLICANT", "APPLICANT_NAME", "OWNER", "OWNER_NAME"],
     "acres": ["ACRES", "ACREAGE", "GIS_ACRES", "AREA_ACRES"],
     "url": ["URL", "LINK", "HYPERLINK", "WEBLINK", "CASE_URL", "DOCUMENTS", "DOC_LINK"],
     "pin": ["PIN", "PARCEL", "PARCEL_ID", "PARCELID", "SCHEDULE", "APN"],
-    "filed": ["DATE_FILED", "FILED", "SUBMITTED", "APPLIED", "OPEN_DATE", "RECEIVED", "DATE_RECEIVED"],
+    "filed": ["DATE_FILED", "FILED", "SUBMITTED", "APPLIED", "OPEN_DATE", "RECEIVED", "DATE_RECEIVED", "INDATE"],
+    "final": ["FINALDATE", "FINAL_DATE", "CLOSED_DATE", "DATE_CLOSED"],
     "pc_hearing": ["PC_HEARING", "PC_DATE", "PLANNING_COMMISSION", "PC_HEARING_DATE"],
     "bcc_hearing": ["BCC_HEARING", "BCC_DATE", "BOCC_HEARING", "BCC_HEARING_DATE"],
     "boa_hearing": ["BOA_HEARING", "BOA_DATE"],
 }
 
-# Case number suffixes used by Jeffco P&Z (e.g. 26-118402RZ) and keywords in the type text.
+# Case number suffixes used by Jeffco P&Z (e.g. 26-103768RZ) and keywords in the type text.
 TYPE_CODES = {
-    "RZ": "RZ", "ZC": "RZ", "SU": "SU", "SP": "SDP", "SDP": "SDP", "PF": "PF", "PP": "PF", "FP": "PF", "MS": "PF",
-    "SB": "PF", "EX": "PF", "VA": "BOA", "BOA": "BOA", "SE": "BOA", "PA": "PA", "LE": "SU",
+    "RZ": "RZ", "ZC": "RZ", "SU": "SU", "SD": "SDP", "SP": "SDP", "SDP": "SDP", "SA": "SDP", "PF": "PF", "PP": "PF",
+    "FP": "PF", "MS": "PF", "SB": "PF", "EX": "PF", "RC": "PF", "VC": "PF", "VA": "BOA", "BOA": "BOA", "SE": "BOA",
+    "PA": "PA", "LE": "SU", "MA": "MA", "MV": "MA", "WR": "MA", "WV": "MA",
 }
+# Layer names in the county's AMANDA "Development Review" map service.
+LAYER_TYPES = [
+    ("rezon", "RZ"), ("special use", "SU"), ("site development", "SDP"), ("site approval", "SDP"),
+    ("plat", "PF"), ("rural cluster", "PF"), ("vacation", "PF"), ("minor amendment", "MA"), ("minor variation", "MA"),
+    ("waiver", "MA"), ("preliminary application", "PA"), ("variance", "BOA"),
+]
 TYPE_WORDS = [
     ("rezon", "RZ"), ("official development plan", "RZ"), ("planned development", "RZ"),
     ("special use", "SU"), ("location and extent", "SU"), ("site development", "SDP"), ("site plan", "SDP"),
@@ -39,7 +47,7 @@ TYPE_WORDS = [
     ("variance", "BOA"), ("adjustment", "BOA"), ("special exception", "BOA"), ("pre-app", "PA"), ("pre app", "PA"),
 ]
 TYPE_LABELS = {"RZ": "Rezoning", "SU": "Special use", "SDP": "Site plan", "PF": "Plat",
-               "BOA": "Variance", "PA": "Pre-application", "OTHER": "Other"}
+               "MA": "Minor change", "BOA": "Variance", "PA": "Pre-application", "OTHER": "Other"}
 
 CLOSED_WORDS = ("approved", "denied", "withdrawn", "closed", "complete", "recorded", "expired", "void")
 URL_RE = re.compile(r"https?://[^\s\"'<>]+", re.I)
@@ -54,6 +62,9 @@ class Case(BaseModel):
     case_type_raw: str = ""
     status: str = ""
     status_kind: str = "review"  # review | hearing | closed
+    layer: str = ""  # county layer the record came from, e.g. "Site Development"
+    hearings_note: str = ""
+    news_url: str = ""
     address: str = ""
     description: str = ""
     planner: str = ""
@@ -81,13 +92,19 @@ def resolve_fields(field_names: list[str], overrides: dict[str, str]) -> dict[st
             # Fuzzy: e.g. "CASE_NUMBER_TXT", "SITE_ADDR".
             stem = {"case_number": "CASE", "case_type": "TYPE", "status": "STATUS",
                     "address": "ADDR", "planner": "PLANNER"}[key]
-            hit = next((orig for up, orig in upper.items() if stem in up and up not in out.values()), None)
+            # Skip numeric code fields like STATUSCODE: they have no public labels.
+            hit = next((orig for up, orig in upper.items()
+                        if stem in up and not up.endswith("CODE") and orig not in out.values()), None)
         if hit:
             out[key] = hit
     return out
 
 
-def normalize_type(case_number: str, type_text: str) -> str:
+def normalize_type(case_number: str, type_text: str, layer_name: str = "") -> str:
+    ln = layer_name.lower()
+    for word, code in LAYER_TYPES:
+        if word in ln:
+            return code
     m = re.search(r"\d([A-Z]{2,3})\s*$", (case_number or "").upper())
     if m and m.group(1) in TYPE_CODES:
         return TYPE_CODES[m.group(1)]
@@ -110,7 +127,7 @@ def to_date(v: Any) -> Optional[str]:
 
 def status_kind(status: str, dates: dict[str, str], today: Optional[dt.date] = None) -> str:
     s = (status or "").lower()
-    if any(w in s for w in CLOSED_WORDS):
+    if any(w in s for w in CLOSED_WORDS) or dates.get("final"):
         return "closed"
     today = today or dt.date.today()
     for k in ("pc_hearing", "bcc_hearing", "boa_hearing"):
@@ -125,20 +142,26 @@ def status_kind(status: str, dates: dict[str, str], today: Optional[dt.date] = N
     return "review"
 
 
+def amanda_case_number(a: dict) -> str:
+    """AMANDA records carry the case number in parts: FOLDERYEAR-FOLDERSEQUENCE + FOLDERTYPE (26-103768RZ)."""
+    y, seq, t = a.get("FOLDERYEAR"), a.get("FOLDERSEQUENCE"), a.get("FOLDERTYPE")
+    return f"{y}-{seq}{t}" if y and seq and t else ""
+
+
 def from_feature(feature: dict, fmap: dict[str, str], point: Optional[tuple[float, float]],
-                 rings: Optional[list]) -> Optional[Case]:
+                 rings: Optional[list], layer_name: str = "") -> Optional[Case]:
     a = feature.get("attributes") or {}
 
     def g(key: str) -> Any:
         f = fmap.get(key)
         return a.get(f) if f else None
 
-    num = str(g("case_number") or "").strip()
+    num = str(g("case_number") or "").strip() or amanda_case_number(a)
     if not num:
         return None
-    dates = {k: d for k in ("filed", "pc_hearing", "bcc_hearing", "boa_hearing") if (d := to_date(g(k)))}
+    dates = {k: d for k in ("filed", "final", "pc_hearing", "bcc_hearing", "boa_hearing") if (d := to_date(g(k)))}
     type_raw = str(g("case_type") or "")
-    code = normalize_type(num, type_raw)
+    code = normalize_type(num, type_raw, layer_name)
     links = []
     for k, v in a.items():
         if isinstance(v, str):
@@ -156,6 +179,7 @@ def from_feature(feature: dict, fmap: dict[str, str], point: Optional[tuple[floa
         type_code=code,
         type_label=TYPE_LABELS[code],
         case_type_raw=type_raw,
+        layer=layer_name,
         status=str(g("status") or "").strip(),
         address=str(g("address") or "").strip(),
         description=str(g("description") or "").strip(),
@@ -171,6 +195,17 @@ def from_feature(feature: dict, fmap: dict[str, str], point: Optional[tuple[floa
         raw={k: v for k, v in a.items() if v not in (None, "")},
     )
     c.status_kind = status_kind(c.status, dates)
+    # AMANDA puts either a street address or a project name in PROPERTYNAME.
+    if not c.address and re.match(r"\d", c.name):
+        c.address = c.name
+    if c.name and c.name == c.address:
+        c.name = f"{_title_address(c.address)} {layer_name or c.type_label}".strip()
     if not c.name:
         c.name = c.description[:60] or c.address or c.type_label
     return c
+
+
+def _title_address(addr: str) -> str:
+    """'10700 W Bowles AVE' -> '10700 W Bowles Ave'."""
+    keep = {"N", "S", "E", "W", "NE", "NW", "SE", "SW", "&"}
+    return " ".join(w if w.upper() in keep or any(ch.isdigit() for ch in w) else w.capitalize() for w in addr.split())

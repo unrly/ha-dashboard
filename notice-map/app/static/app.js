@@ -3,16 +3,19 @@
 const TYPES = {
   RZ: { label: "Rezoning", v: "--t-rz" }, SU: { label: "Special use", v: "--t-su" },
   SDP: { label: "Site plan", v: "--t-sdp" }, PF: { label: "Plat", v: "--t-pf" },
-  BOA: { label: "Variance", v: "--t-boa" }, PA: { label: "Pre-application", v: "--t-pa" },
+  MA: { label: "Minor change", v: "--t-ma" }, BOA: { label: "Variance", v: "--t-boa" },
+  PA: { label: "Pre-application", v: "--t-pa" },
   OTHER: { label: "Other", v: "--muted" },
 };
-const DATE_LABELS = { filed: "Application filed", pc_hearing: "Planning Commission", bcc_hearing: "County Commissioners", boa_hearing: "Board of Adjustment" };
+const DATE_LABELS = { filed: "Application filed", final: "Final decision", pc_hearing: "Planning Commission", bcc_hearing: "County Commissioners", boa_hearing: "Board of Adjustment" };
 
 const $ = (s) => document.querySelector(s);
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmtDate = (s) => { if (!/^\d{4}-\d{2}-\d{2}/.test(s || "")) return s || ""; return new Date(s.slice(0, 10) + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); };
 const today = new Date().toISOString().slice(0, 10);
+const CITIZEN_PORTAL = "https://citizenportal.jeffco.us/citizenportal/app/landing";
+const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };
 
 let cases = [];
 let active = new Set(Object.keys(TYPES));
@@ -42,7 +45,9 @@ function statusPill(c) {
   const cls = { hearing: "hear", closed: "ok", review: "rev" }[c.status_kind] || "rev";
   const next = nextHearing(c);
   const short = { pc_hearing: "PC", bcc_hearing: "BCC", boa_hearing: "BOA" };
-  const text = c.status_kind === "hearing" && next ? `${short[next.k]} hearing ${fmtDate(next.date).replace(/, \d{4}$/, "")}` : (c.status || "In review");
+  const filed = (c.dates || {}).filed;
+  const text = c.status_kind === "hearing" && next ? `${short[next.k]} hearing ${fmtDate(next.date).replace(/, \d{4}$/, "")}`
+    : c.status || (c.status_kind === "closed" ? "Decided" : filed ? `Open · filed ${fmtDate(filed)}` : "Open");
   return `<span class="pill ${cls}">${esc(text)}</span>`;
 }
 function nextHearing(c) {
@@ -96,10 +101,10 @@ function drawParcelAndFootprints(c) {
 // ---------- list ----------
 function renderFilters() {
   const present = new Set(cases.map((c) => c.type_code));
-  $("#chips").innerHTML = Object.entries(TYPES).filter(([k]) => present.has(k) || k !== "OTHER")
+  $("#chips").innerHTML = Object.entries(TYPES).filter(([k]) => present.has(k))
     .map(([k, t]) => `<button type="button" class="chip" data-t="${k}" aria-pressed="${active.has(k)}"><span class="dot" style="background:var(${t.v})"></span>${t.label}</button>`).join("");
   $("#chips").querySelectorAll(".chip").forEach((b) => (b.onclick = () => { const k = b.dataset.t; active.has(k) ? active.delete(k) : active.add(k); renderAll(); }));
-  $("#legend").innerHTML = Object.entries(TYPES).filter(([k]) => k !== "OTHER").map(([, t]) => `<div><span class="dot" style="background:var(${t.v})"></span>${t.label}</div>`).join("") +
+  $("#legend").innerHTML = Object.entries(TYPES).filter(([k]) => present.has(k)).map(([, t]) => `<div><span class="dot" style="background:var(${t.v})"></span>${t.label}</div>`).join("") +
     `<div><span class="dot" style="border:2px dashed var(--warn);background:transparent"></span>Hearing scheduled</div><div><span class="dot" style="background:var(--notice)"></span>New since last scan</div>`;
 }
 
@@ -132,7 +137,9 @@ function renderSheet() {
   const dates = Object.entries(c.dates || {}).sort((a, b) => a[1].localeCompare(b[1]));
   const next = nextHearing(c);
   const facts = [
-    ["Request", s?.request || c.case_type_raw], ["Status", c.status], ["Site", c.acres ? `${c.acres} acres` : ""],
+    ["Request", s?.request || [c.layer, c.case_type_raw].filter(Boolean).join(" · ")], ["Status", c.status],
+    ["Filed", fmtDate((c.dates || {}).filed)], ["Site", c.acres ? `${c.acres} acres` : ""],
+    ["Parcels", c.parcel_count || ""],
     ["Applicant", c.applicant], ["Case planner", c.planner], ["Parcel", c.pin],
   ].filter(([, v]) => v);
   const docs = c.docs || [];
@@ -143,7 +150,8 @@ function renderSheet() {
      <div class="typeline"><span class="tag" style="background:var(${t.v})">${esc(t.label)}</span>${statusPill(c)}<span class="src">${esc(c.address)}</span></div>
    </div>
    <dl class="facts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
-   ${c.description ? `<section class="sec"><h3>County description</h3><p class="summary">${esc(c.description)}</p></section>` : ""}
+   ${c.description ? `<section class="sec"><h3>County description</h3><p class="summary">${esc(c.description)}${c.description.length >= 49 && !c.news_url ? "…" : ""}</p></section>` : ""}
+   ${c.hearings_note ? `<section class="sec"><h3>Hearings</h3><p class="summary">${esc(c.hearings_note)}</p></section>` : ""}
    ${s ? `
      <section class="sec"><h3>What's proposed <span class="ai">AI summary · ${esc(s.confidence)} confidence</span></h3><p class="summary">${esc(s.summary)}</p></section>
      ${s.key_numbers?.length ? `<section class="sec"><h3>Key numbers <span class="ai">from plans</span></h3><div class="kv">${s.key_numbers.slice(0, 6).map((k) => `<div title="${esc(k.source)}"><b>${esc(k.value)}</b><span>${esc(k.label)}</span></div>`).join("")}</div></section>` : ""}
@@ -157,8 +165,8 @@ function renderSheet() {
        ${status?.ai_enabled ? `<p><button class="btn" id="sumBtn" type="button">Summarize plans</button></p>` : ""}
      </section>`}
    ${dates.length ? `<section class="sec"><h3>Timeline</h3><ul class="timeline">${dates.map(([k, d]) => `<li class="${d < today ? "done" : next && next.k === k ? "next" : ""}"><span class="tdot"></span><time>${esc(fmtDate(d))}</time><span>${esc(DATE_LABELS[k] || k)}</span></li>`).join("")}</ul></section>` : ""}
-   <section class="sec"><h3>County documents</h3>${docs.length ? `<ul class="docs">${docs.map((d, i) => `<li><a href="${esc(d.url)}" target="_blank" rel="noopener"><span class="pdf">PDF</span><span>${esc(d.title)}</span><span class="pg">jeffco.us ↗</span></a></li>`).join("")}</ul>` :
-     `<p class="cap">No document links were found for this case. Check the county's case page or call Planning &amp; Zoning at 303-271-8700.</p>`}</section>
+   <section class="sec"><h3>County documents</h3>${docs.length ? `<ul class="docs">${docs.map((d) => `<li><a href="${esc(d.url)}" target="_blank" rel="noopener"><span class="pdf">${{ folder: "FOLDER", page: "PAGE" }[d.kind] || "PDF"}</span><span>${esc(d.title)}</span><span class="pg">${esc(hostOf(d.url))} ↗</span></a></li>`).join("")}</ul>` : ""}
+     <p class="cap">${docs.length ? "" : "The county hasn't posted documents for this case online. "}Full case files: <a href="${CITIZEN_PORTAL}" target="_blank" rel="noopener">Jeffco Citizen Portal</a> → Planning &amp; Zoning Search → Advanced → case number <b>${esc(c.case_number)}</b> → View Public Documents.</p></section>
    <details class="sec"><summary class="cap">All county fields</summary><dl class="raw" id="rawFields"></dl></details>`;
   const btn = $("#sumBtn");
   if (btn) btn.onclick = () => summarize(c.id, !!s);
@@ -256,7 +264,7 @@ function showError(msg) { const e = $("#err"); e.textContent = msg; e.hidden = !
 
 async function loadStatus() {
   status = await (await fetch("api/status")).json();
-  $("#subtitle").textContent = `Land use notices · ZIP ${status.zip} · unincorporated Jefferson County`;
+  $("#subtitle").textContent = `Land use notices · ZIP ${status.zip}${status.buffer_km ? ` + ${status.buffer_km} km` : ""} · unincorporated Jefferson County`;
   const ls = status.last_scan;
   $("#lastScan").textContent = ls ? `Last scan: ${new Date(ls.finished).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}${ls.ok ? "" : " (failed)"}` : "Not scanned yet";
 }

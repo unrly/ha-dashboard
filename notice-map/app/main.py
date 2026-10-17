@@ -31,6 +31,7 @@ def create_app() -> FastAPI:
     def status():
         return {
             "zip": settings.area.zip,
+            "buffer_km": settings.area.buffer_km,
             "center": settings.area.center,
             "last_scan": store.last_scan(),
             "scan": state.snapshot(),
@@ -50,7 +51,8 @@ def create_app() -> FastAPI:
         new_ids = set(json.loads(store.get("new_ids") or "[]"))
         out = []
         for c in store.cases(settings.source.keep_closed_days):
-            c.pop("raw", None)
+            raw = c.pop("raw", None) or {}
+            c["parcel_count"] = raw.get("parcel_count")
             c["is_new"] = c["id"] in new_ids
             out.append(c)
         return out

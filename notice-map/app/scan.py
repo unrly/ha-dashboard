@@ -1,6 +1,7 @@
 """The on-demand scan: county cases -> map locations -> keep the ones inside the area -> save."""
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
 import json
 import logging
@@ -9,8 +10,8 @@ from typing import Optional
 
 import httpx
 
-from . import arcgis, area, docs, geo, geocode, interpret
-from .cases import Case, from_feature, resolve_fields
+from . import arcgis, area, docs, geo, geocode, interpret, news
+from .cases import Case, from_feature, resolve_fields, status_kind
 from .config import Settings
 from .discover import find_candidates, http_client
 from .store import Store, now
@@ -37,14 +38,23 @@ class ScanState:
                 "result": self.result}
 
 
-def resolve_layer(settings: Settings, store: Store, client: httpx.Client, state: ScanState) -> str:
-    if settings.source.layer_url:
-        return settings.source.layer_url
+def resolve_layers(settings: Settings, store: Store, client: httpx.Client, state: ScanState) -> list[tuple[str, str]]:
+    """Return [(layer_url, layer_name)] to query."""
+    src = settings.source
+    if src.layer_url:
+        return [(src.layer_url, "")]
+    if src.service_url:
+        svc = arcgis.get_json(client, src.service_url)
+        layers = [(f"{src.service_url.rstrip('/')}/{l['id']}", l.get("name", ""))
+                  for l in svc.get("layers") or [] if not l.get("subLayerIds")]
+        if not layers:
+            raise RuntimeError(f"No layers found in {src.service_url}")
+        return layers
     cached = store.get("auto_layer_url")
     if cached:
-        return cached
+        return [(cached, "")]
     state.say("Looking for the county's land use case layer (first scan only)…")
-    cands = find_candidates(client, settings.source.gis_roots)
+    cands = find_candidates(client, src.gis_roots)
     if not cands:
         raise RuntimeError("Couldn't find a land use case layer on the county GIS server. "
                            "Run `python -m app.discover` and set source.layer_url in config.yaml.")
@@ -52,7 +62,61 @@ def resolve_layer(settings: Settings, store: Store, client: httpx.Client, state:
     state.say(f"Using layer: {best['name']}")
     store.put("auto_layer_url", best["url"])
     store.put("auto_layer_candidates", json.dumps(cands))
-    return best["url"]
+    return [(best["url"], "")]
+
+
+def _layer_where(settings: Settings, info: dict, fmap: dict[str, str]) -> str:
+    where = settings.source.where or "1=1"
+    filed = fmap.get("filed")
+    ftype = next((f.get("type") for f in info.get("fields") or [] if f["name"] == filed), None)
+    if filed and ftype == "esriFieldTypeDate" and settings.source.max_age_years:
+        cutoff = dt.date.today() - dt.timedelta(days=int(365.25 * settings.source.max_age_years))
+        where = f"({where}) AND {filed} >= DATE '{cutoff.isoformat()}'"
+    return where
+
+
+def fetch_cases(settings: Settings, store: Store, client: httpx.Client, state: ScanState,
+                env: tuple[float, float, float, float]) -> tuple[list[tuple[dict, dict, str]], int]:
+    """Query every case layer. Returns ([(feature, field_map, layer_name)], total)."""
+    out = []
+    layers = resolve_layers(settings, store, client, state)
+    for i, (url, name) in enumerate(layers, 1):
+        state.say(f"Fetching cases from the county ({i} of {len(layers)}{': ' + name if name else ''})…")
+        info = arcgis.layer_info(client, url)
+        fields = [f["name"] for f in info.get("fields") or []]
+        fmap = resolve_fields(fields, settings.source.fields)
+        amanda = {"FOLDERYEAR", "FOLDERSEQUENCE", "FOLDERTYPE"} <= set(fields)
+        if "case_number" not in fmap and not amanda:
+            if len(layers) == 1:
+                raise RuntimeError(f"Can't tell which field holds the case number in {url}. Set "
+                                   "source.fields.case_number in config.yaml (see `python -m app.discover --layer`).")
+            log.warning("skip %s: no case number field", url)
+            continue
+        has_geom = bool(info.get("geometryType"))
+        for f in arcgis.query_features(client, url, where=_layer_where(settings, info, fmap),
+                                       envelope=env if has_geom else None):
+            out.append((f, fmap, name or info.get("name", "")))
+    return out, len(out)
+
+
+def enrich_from_posts(c: Case, post: dict) -> None:
+    if post.get("title"):
+        c.name = post["title"]
+    if len(post.get("summary", "")) > len(c.description):
+        c.description = post["summary"]
+    if post.get("manager"):
+        c.planner = post["manager"]
+    c.hearings_note = post.get("hearings", "")
+    c.news_url = post.get("url", "")
+    for k, v in (post.get("hearing_dates") or {}).items():
+        c.dates.setdefault(k, v)
+    known = {l["url"] for l in c.links}
+    for d in post.get("docs") or []:
+        if d["url"] not in known:
+            c.links.append({"title": d["title"], "url": d["url"]})
+    if c.news_url and c.news_url not in known:
+        c.links.append({"title": "County case page", "url": c.news_url, "kind": "page"})
+    c.status_kind = status_kind(c.status, c.dates)
 
 
 def run_scan(settings: Settings, store: Store, state: ScanState) -> dict:
@@ -64,25 +128,17 @@ def run_scan(settings: Settings, store: Store, state: ScanState) -> dict:
             state.say("Loading the ZIP boundary…")
             region = area.load_area(settings, client)
             g = region["geometry"]
-            env = geo.bbox(g)
+            buf = settings.area.buffer_km
+            env = geo.expand_bbox(geo.bbox(g), buf)
 
-            layer_url = resolve_layer(settings, store, client, state)
-            state.say("Fetching active cases from the county…")
-            info = arcgis.layer_info(client, layer_url)
-            fmap = resolve_fields([f["name"] for f in info.get("fields") or []], settings.source.fields)
-            if "case_number" not in fmap:
-                raise RuntimeError(f"Can't tell which field holds the case number in {layer_url}. "
-                                   "Set source.fields.case_number in config.yaml (see `python -m app.discover --layer`).")
-            has_geom = bool(info.get("geometryType"))
-            feats = list(arcgis.query_features(client, layer_url, where=settings.source.where,
-                                               envelope=env if has_geom else None))
-            state.say(f"Got {len(feats)} cases. Placing them on the map…")
+            feats, total = fetch_cases(settings, store, client, state, env)
+            state.say(f"Got {total} records. Placing them on the map…")
 
             kept: list[Case] = []
             geocoded = 0
-            for f in feats:
+            for f, fmap, layer_name in feats:
                 pt = geo.esri_to_point(f.get("geometry"))
-                c = from_feature(f, fmap, pt, geo.esri_rings(f.get("geometry")))
+                c = from_feature(f, fmap, pt, geo.esri_rings(f.get("geometry")), layer_name)
                 if c is None:
                     continue
                 if c.lat is None and c.address:
@@ -90,18 +146,31 @@ def run_scan(settings: Settings, store: Store, state: ScanState) -> dict:
                     if p:
                         c.lon, c.lat = p
                         geocoded += 1
-                if c.lat is None or not geo.point_in_geometry(c.lon, c.lat, g):
+                if c.lat is None or not geo.within(c.lon, c.lat, g, buf):
                     continue
                 kept.append(c)
-            # One case can span several parcels; merge records that share a case number.
-            merged: dict[str, Case] = {}
+            # One case can span several parcels (one record each); merge records that share a case number.
+            merged: dict[str, list[Case]] = {}
             for c in kept:
-                if c.id in merged:
-                    m = merged[c.id]
-                    m.parcel = (m.parcel or []) + (c.parcel or [])
-                else:
-                    merged[c.id] = c
-            kept = list(merged.values())
+                merged.setdefault(c.id, []).append(c)
+            kept = []
+            for group in merged.values():
+                m = group[0]
+                if len(group) > 1:
+                    m.lat = sum(x.lat for x in group) / len(group)
+                    m.lon = sum(x.lon for x in group) / len(group)
+                    rings = [r for x in group for r in (x.parcel or [])]
+                    m.parcel = rings or None
+                    m.raw["parcel_count"] = len(group)
+                kept.append(m)
+
+            if settings.source.news_list_url:
+                state.say("Reading the county's high interest case posts…")
+                posts = news.fetch_posts(client, settings.source.news_list_url)
+                for c in kept:
+                    if c.case_number in posts:
+                        enrich_from_posts(c, posts[c.case_number])
+
             state.say(f"{len(kept)} cases are inside ZIP {settings.area.zip}. Saving…")
             new_ids = store.upsert_cases(kept, scan_time)
 
@@ -121,8 +190,8 @@ def run_scan(settings: Settings, store: Store, state: ScanState) -> dict:
         store.put("last_scan_time", scan_time)
         store.put("new_ids", json.dumps(new_ids if had_prior else []))
         msg = f"{len(kept)} notices · {len(new_ids) if had_prior else 0} new"
-        store.finish_scan(scan_id, True, msg, len(feats), len(kept), len(new_ids))
-        return {"found": len(feats), "kept": len(kept), "new": len(new_ids) if had_prior else 0,
+        store.finish_scan(scan_id, True, msg, total, len(kept), len(new_ids))
+        return {"found": total, "kept": len(kept), "new": len(new_ids) if had_prior else 0,
                 "geocoded": geocoded, "message": msg}
     except Exception as e:
         store.finish_scan(scan_id, False, str(e))
@@ -148,7 +217,7 @@ def summarize_case(settings: Settings, store: Store, case_id: str, force: bool =
     pdfs = []
     folder = settings.data_dir / "docs" / case_id
     with http_client(settings) as http:
-        for d in links[: settings.ai.max_docs_per_case]:
+        for d in [x for x in links if x.get("kind", "pdf") == "pdf"][: settings.ai.max_docs_per_case]:
             p = docs.download(http, d["url"], folder, settings.ai.max_doc_mb)
             if p:
                 pdfs.append((d["title"], p))

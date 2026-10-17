@@ -1,7 +1,7 @@
 # Jeffco Notice Map
 
-A small self-hosted web app that maps Jefferson County, Colorado land use notices (rezonings, special uses,
-site plans, plats, variances) near ZIP 80128. It scrapes only when you press **Scan county now**.
+A small self-hosted web app that maps Jefferson County, Colorado land use cases (rezonings, special uses,
+site plans, plats, pre-applications) in and around ZIP 80128. It scrapes only when you press **Scan county now**.
 
 For each case you get:
 
@@ -32,29 +32,35 @@ cp config.example.yaml config.yaml
 uvicorn app.main:app --host 0.0.0.0 --port 8765
 ```
 
-## The first scan
+## Where the data comes from
 
-The county publishes active cases as a layer on its ArcGIS server (the same data behind the jMap
-Planning & Zoning map). On the first scan, if `source.layer_url` is empty, the app searches the county
-GIS server for the layer that looks most like active land use cases and remembers it.
+- **Cases:** the county's public `PZ_Amanda7_Development_Review` map service
+  (`gisportal.jeffco.us/server/rest/services/PZ_Amanda7_Development_Review/MapServer`). It is fed by AMANDA,
+  the county's case system, and has one layer per case type. Each record is one parcel; the app rebuilds the
+  case number (`26-103768RZ`) and merges multi-parcel cases. Cases filed more than `max_age_years` ago are
+  skipped, because the service still lists old cases that were never closed out.
+- **Details for high-interest cases:** the county's Planning and Zoning news posts
+  (`jeffco.us/CivicAlerts.aspx?CID=64`). These add a plain-language summary, the case manager, hearing dates,
+  and a link to the case's public documents folder.
+- **Boundary:** the Census ZIP Code Tabulation Area for 80128, plus `area.buffer_km` (1 km by default) so
+  cases just outside the line still show.
 
-To check what it picked, or choose it yourself:
+The county service gives a status code with no public labels, so the app shows "Open · filed <date>"
+instead. It also truncates descriptions to 50 characters; the full text and documents are in the
+[Jeffco Citizen Portal](https://citizenportal.jeffco.us/citizenportal/app/landing) (Planning & Zoning Search →
+Advanced → case number → View Public Documents), which each case links to.
 
-```sh
-python -m app.discover                    # ranked list of candidate layers
-python -m app.discover --layer <url>      # fields, guessed field mapping, and one sample record
-```
-
-Then set `source.layer_url` (and `source.fields` if any guess is wrong) in `config.yaml`.
-With Docker: `docker compose run --rm notice-map python -m app.discover`.
-
-If cases show up without documents, find a case's page on jeffco.us and put its URL pattern in
-`source.case_page_template`, with `{case}` where the case number goes. The app collects PDF links from that page.
+If the county changes its services, `python -m app.discover` searches its GIS server for case layers and
+`python -m app.discover --layer <url>` shows a layer's fields. Point `source.service_url` or
+`source.layer_url` at the result.
 
 ## Plan summaries
 
 Summaries need an Anthropic API key in `ANTHROPIC_API_KEY`. By default a summary is made only when you
 open a case and press **Summarize plans**. It is saved and reused until the case's document list changes.
+Claude reads any PDFs the app can download for the case; the county's SharePoint document folders are
+linked but not yet downloaded automatically, so for most cases the summary works from the case record and
+the county's post.
 Set `ai.interpret_on_scan: true` to summarize every new case during a scan.
 
 Cost depends on how many pages the PDFs have; expect roughly $0.10 to $1 per case.
@@ -80,7 +86,7 @@ Or add a **Webpage** card to an existing dashboard.
 ## Limits
 
 - Only cases in **unincorporated** Jefferson County. Parts of 80128 inside Littleton city limits go through the city.
-- The case layer's fields aren't documented publicly, so field mapping is guessed. Check it with `app.discover`.
+- The county's status codes have no public labels, and its descriptions are cut at 50 characters.
 - Map tiles come from OpenStreetMap; please keep usage light.
 
 ## Tests

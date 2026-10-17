@@ -50,6 +50,15 @@ def query_features(
         "returnGeometry": "true",
         "outSR": 4326,
     }
+    fields = info.get("fields") or []
+    has_oid = info.get("objectIdField") or any(f.get("type") == "esriFieldTypeOID" for f in fields)
+    if supports_paging and not has_oid:
+        # Paging needs a sort order when the layer has no object ID (true of Jeffco's AMANDA layers).
+        sortable = [f["name"] for f in fields if f.get("type") not in ("esriFieldTypeGeometry", "esriFieldTypeBlob")]
+        if sortable:
+            params["orderByFields"] = ",".join(sortable[:3])
+        else:
+            supports_paging = False
     if envelope:
         xmin, ymin, xmax, ymax = envelope
         params.update(
