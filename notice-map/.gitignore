@@ -1,0 +1,6 @@
+data/*
+!data/.gitkeep
+config.yaml
+__pycache__/
+.pytest_cache/
+.env

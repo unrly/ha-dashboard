@@ -1,0 +1,31 @@
+# Copy to config.yaml and edit. Everything is optional; these are the defaults.
+
+area:
+  mode: zcta          # zcta = ZIP boundary from the Census | radius | geojson
+  zip: "80128"
+  center: [39.5866, -105.0850]   # lat, lon: map start point and radius-mode center
+  radius_km: 6
+  # geojson_path: /config/my-area.geojson
+
+source:
+  # The county ArcGIS layer with active land use cases. Leave empty and the first scan
+  # will search the county GIS server for it. Check the result with:
+  #   python -m app.discover            (or: docker compose run --rm notice-map python -m app.discover)
+  layer_url:
+  where: "1=1"        # optional server-side filter, e.g. "STATUS <> 'Closed'"
+  # Map fields if the guesses are wrong (see `python -m app.discover --layer <url>`):
+  fields: {}
+  #   case_number: CASE_NUM
+  #   name: PROJECT_NAME
+  #   status: CASE_STATUS
+  # Case web page used to find PDF links; {case} becomes the case number.
+  case_page_template:
+  keep_closed_days: 90
+
+ai:
+  enabled: true
+  model: claude-opus-5-5
+  effort: medium
+  interpret_on_scan: false   # true = summarize every new case during a scan (costs more)
+  max_docs_per_case: 6
+  max_doc_mb: 25

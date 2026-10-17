@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jeffco Notice Map</title>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="brand">
+      <div class="sign" aria-hidden="true">PZ</div>
+      <div>
+        <h1>Jeffco Notice Map</h1>
+        <p id="subtitle">Land use notices · unincorporated Jefferson County</p>
+      </div>
+    </div>
+    <div class="scan">
+      <span class="meta" id="lastScan">Not scanned yet</span>
+      <button class="btn" id="scanBtn" type="button">
+        <svg id="scanIcon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        Scan county now
+      </button>
+    </div>
+  </header>
+  <div class="err" id="err" hidden></div>
+
+  <main class="main">
+    <aside class="col list" aria-label="Notices">
+      <div class="filters">
+        <div class="label">Case type</div>
+        <div class="chips" id="chips"></div>
+        <div class="count" id="count"></div>
+      </div>
+      <ul class="cases" id="cases"></ul>
+    </aside>
+
+    <section class="mapwrap" aria-label="Map">
+      <div id="map"></div>
+      <div class="legend" id="legend"></div>
+      <div class="toast" id="toast" hidden></div>
+    </section>
+
+    <aside class="col sheet" aria-label="Case details"><div class="sheet-in" id="sheet"></div></aside>
+  </main>
+</div>
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+services:
+  notice-map:
+    build: .
+    container_name: jeffco-notice-map
+    ports:
+      - "8765:8765"
+    environment:
+      # Optional: turns on plan summaries. Leave unset to run without them.
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - ./data:/data
+      - ./config.yaml:/config/config.yaml:ro
+    restart: unless-stopped
